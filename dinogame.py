@@ -1,6 +1,6 @@
 import pgzrun
 import random
-from pygame import Rect  # Importar Rect do pygame
+from pygame import Rect  # Importar somente Rect do pygame
 
 # Configurações da tela
 WIDTH = 600
@@ -9,6 +9,17 @@ HEIGHT = 400
 # posição inicial da imagem de fundo
 background_x = 0
 velocity_camera = 2  # velocidade da câmera
+
+#img do personagem
+player = Actor('dino')
+player.x = 100 #posição do player na horizontal
+player.y = HEIGHT - 40 #posição na vertical
+
+# sprites do player
+player_images = ['dino', 'dino_run1', 'dino_run2']
+current_image_index = 0
+animation_speed = 0.1  # controla a velocidade da animação
+animation_timer = 0
 
 # lista das plataformas
 plataforms = []
@@ -22,8 +33,8 @@ MIN_VERTICAL_DISTANCE = 30  # distância min entre plataformas
 
 # função pra gerar plataformas aleatoriamente
 def create_plataforms():
-    global plataforms
-    plataforms = []
+    global plataforms 
+    plataforms = []    
     num_plataforms = 2
 
     for _ in range(num_plataforms):
@@ -40,13 +51,13 @@ def create_plataforms():
                     break  # sai do loop p/ tentar de novo
 
         plataform = Rect(x, y, width, PLATAFORM_HEIGHT)
-        plataforms.append(plataform)
+        plataforms.append(plataform)        
 
 # função para criar as plataformas no início do game
 create_plataforms()
 
-def update():
-    global background_x
+def update(dt):
+    global background_x, current_image_index, animation_timer
     background_x -= velocity_camera  # move o fundo p/esquerda da tela
 
     # reinicia a posição para criar um loop infinito
@@ -63,6 +74,15 @@ def update():
             plataforms[plataforms.index(plataform)] = Rect(WIDTH + random.randint(50, 150), 
                                                             random.randint(100, HEIGHT - 50), 
                                                             width, PLATAFORM_HEIGHT)
+        # Atualiza a animação do personagem
+    animation_timer += dt
+    if animation_timer > animation_speed:
+        current_image_index = (current_image_index + 1) % len(player_images)
+        animation_timer = 0
+
+    # Atualiza a imagem do jogador
+    player.image = player_images[current_image_index]
+
 
 def draw():
     screen.fill((255, 255, 255))  # fundo branco
@@ -76,6 +96,10 @@ def draw():
 
     # desenha todas as plataformas como retângulos
     for plataform in plataforms:
-        screen.draw.filled_rect(plataform, (83, 83, 83))  # Cor preta
-
+        screen.draw.filled_rect(plataform, (83, 83, 83))
+    
+    #desenha o player na tela
+    player.draw()
+    
+ 
 pgzrun.go()
