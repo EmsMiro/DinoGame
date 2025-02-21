@@ -30,6 +30,12 @@ PLATAFORM_MIN_WIDTH = 30
 PLATAFORM_MAX_WIDTH = 80
 MIN_VERTICAL_DISTANCE = 30  # distância min entre plataformas
 
+# variáveis para pulo
+gravity = 0.5
+velocity_y = 0
+jumping = False
+double_jump = False
+
 
 # função pra gerar plataformas aleatoriamente
 def create_plataforms():
@@ -43,7 +49,7 @@ def create_plataforms():
        # lógica p/ garantir que as plataformas não se sobreponham
         valid_position = False
         while not valid_position:
-            y = random.randint(250, HEIGHT - 20)  # posição na vertical
+            y = random.randint(200, HEIGHT - 150)  # posição na vertical
             valid_position = True  # assume que a posição é válida
             for plataform in plataforms:
                 if abs(plataform.y - y) < MIN_VERTICAL_DISTANCE:  # p/ verifica a distância
@@ -57,12 +63,37 @@ def create_plataforms():
 create_plataforms()
 
 def update(dt):
-    global background_x, current_image_index, animation_timer
+    global background_x, current_image_index, animation_timer, velocity_y, jumping, double_jump
     background_x -= velocity_camera  # move o fundo p/esquerda da tela
 
     # reinicia a posição para criar um loop infinito
     if background_x <= -WIDTH:
         background_x = 0
+
+    # Atualiza a física do pulo
+    if jumping:
+        velocity_y += gravity  # aplica gravidade
+        player.y += velocity_y  # atualiza a posição vertical do jogador
+
+        # verificação se o jogador atingiu o solo
+        on_ground = False
+        for plataform in plataforms:
+            if player.colliderect(plataform) and velocity_y >= 0:  # verifica colisão com plataformas
+                player.y = plataform.top - player.height // 2  # ajusta a posição do jogador
+                velocity_y = 0  # reseta a velocidade vertical
+                on_ground = True
+                double_jump = False  
+                break
+        # verifica se o player caiu abaixo do chão
+        if player.y >= HEIGHT - player.height // 2:  # ajusta para a altura do sprite
+            player.y = HEIGHT - player.height // 2  # impeder que o jogador fique abaixo do chão
+            jumping = False  # para o pulo se atingir o chão
+
+        if not on_ground and player.y < HEIGHT:  # se não estiver no chão e ainda está no ar
+            player.y = min(player.y, HEIGHT)  # impede que o jogador saia da tela
+        elif player.y >= HEIGHT:  # se o jogador cair abaixo do chão
+            player.y = HEIGHT
+            jumping = False  # para o pulo se atingir o chão
     
     # move todas as plataformas com o fundo
     for plataform in plataforms:
@@ -71,19 +102,28 @@ def update(dt):
         # verificação para saber se a plataforma saiu da tela
         if plataform.right < 0:  
             width = random.randint(PLATAFORM_MIN_WIDTH, PLATAFORM_MAX_WIDTH)  # largura aleatória
-            plataforms[plataforms.index(plataform)] = Rect(WIDTH + random.randint(50, 150), 
+            plataforms[plataforms.index(plataform)] = Rect(WIDTH + random.randint(50, 200), 
                                                             random.randint(100, HEIGHT - 50), 
                                                             width, PLATAFORM_HEIGHT)
-        # Atualiza a animação do personagem
+        # atualiza a animação do personagem
     animation_timer += dt
     if animation_timer > animation_speed:
         current_image_index = (current_image_index + 1) % len(player_images)
         animation_timer = 0
 
-    # Atualiza a imagem do jogador
+    # atualiza a imagem do jogador
     player.image = player_images[current_image_index]
 
-
+def on_key_down(key):
+    global jumping, velocity_y, double_jump
+    if key == keys.SPACE:
+        if not jumping:  # se o jogador não está pulando
+            jumping = True
+            velocity_y = -10  # força do pulo
+        elif not double_jump: 
+            double_jump = True
+            velocity_y = -10  
+       
 def draw():
     screen.fill((255, 255, 255))  # fundo branco
 
@@ -99,7 +139,6 @@ def draw():
         screen.draw.filled_rect(plataform, (83, 83, 83))
     
     #desenha o player na tela
-    player.draw()
-    
+    player.draw()    
  
 pgzrun.go()
