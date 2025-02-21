@@ -28,7 +28,8 @@ plataforms = []
 PLATAFORM_HEIGHT = 3
 PLATAFORM_MIN_WIDTH = 30
 PLATAFORM_MAX_WIDTH = 80
-MIN_VERTICAL_DISTANCE = 30  # distância min entre plataformas
+MIN_VERTICAL_DISTANCE = 30  # distância min entre plataformas na vertical
+MIN_HORIZONTAL_DISTANCE = 50 # distancia min entre as plataformas na horizontal
 
 # variáveis para pulo
 gravity = 0.5
@@ -36,6 +37,9 @@ velocity_y = 0
 jumping = False
 double_jump = False
 
+# Definição dos limites da altura das plataformas
+PLATFORM_MIN_Y = HEIGHT - 100  # Um pouco acima do solo
+PLATFORM_MAX_Y = HEIGHT // 2   # Metade da tela (mais alto permitido)
 
 # função pra gerar plataformas aleatoriamente
 def create_plataforms():
@@ -49,12 +53,19 @@ def create_plataforms():
        # lógica p/ garantir que as plataformas não se sobreponham
         valid_position = False
         while not valid_position:
-            y = random.randint(200, HEIGHT - 150)  # posição na vertical
+            #y = random.randint(200, HEIGHT - 150)  # posição na vertical
+            y = random.randint(PLATFORM_MAX_Y, PLATFORM_MIN_Y)            
             valid_position = True  # assume que a posição é válida
             for plataform in plataforms:
                 if abs(plataform.y - y) < MIN_VERTICAL_DISTANCE:  # p/ verifica a distância
                     valid_position = False  # se estiver muito próxima, marca como inválida
                     break  # sai do loop p/ tentar de novo
+            
+                # Verifica a distância horizontal
+                if abs(plataform.x - x) < (plataform.width + MIN_HORIZONTAL_DISTANCE):  # p/ verifica a distância horizontal
+                    valid_position = False  # se estiver muito próxima, marca como inválida
+                    break  # sai do loop p/ tentar de novo
+
 
         plataform = Rect(x, y, width, PLATAFORM_HEIGHT)
         plataforms.append(plataform)        
@@ -100,11 +111,11 @@ def update(dt):
         plataform.x -= velocity_camera
 
         # verificação para saber se a plataforma saiu da tela
-        if plataform.right < 0:  
-            width = random.randint(PLATAFORM_MIN_WIDTH, PLATAFORM_MAX_WIDTH)  # largura aleatória
-            plataforms[plataforms.index(plataform)] = Rect(WIDTH + random.randint(50, 200), 
-                                                            random.randint(100, HEIGHT - 50), 
-                                                            width, PLATAFORM_HEIGHT)
+        if plataform.right < 0:              
+            width = random.randint(PLATAFORM_MIN_WIDTH, PLATAFORM_MAX_WIDTH)
+            new_x = WIDTH + random.randint(50, 200)
+            new_y = random.randint(PLATFORM_MAX_Y, PLATFORM_MIN_Y)  #área limite
+            plataforms[plataforms.index(plataform)] = Rect(new_x, new_y, width, PLATAFORM_HEIGHT)
         # atualiza a animação do personagem
     animation_timer += dt
     if animation_timer > animation_speed:
@@ -119,7 +130,7 @@ def on_key_down(key):
     if key == keys.SPACE:
         if not jumping:  # se o jogador não está pulando
             jumping = True
-            velocity_y = -10  # força do pulo
+            velocity_y = -12  # força do pulo
         elif not double_jump: 
             double_jump = True
             velocity_y = -10  
