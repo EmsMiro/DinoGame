@@ -32,16 +32,33 @@ velocity_y = 0
 jumping = False
 double_jump = False
 score = 0  
-eggs = []  # array p/ armazenar os ovos
-available_eggs = []  # array p/ ovos que ainda estão disponíveis
-collected_eggs = []  # array p/ rastrear os ovos coletados
 
-# função p/ criar as plataformas no mapa
+eggs = []  # array p/ armazenar os ovos
+available_eggs = []  # Array p/ ovos que ainda estão disponíveis
+collected_eggs = []  # Array p/ rastrear os ovos coletados
+
+# variáveis dos inimigos
+cacti = []
+CACTUS_IMAGES = ['cactus1', 'cactus2']
+CACTUS_MIN_DISTANCE = 250
+CACTUS_MAX_DISTANCE = 300
+CACTUS_SPEED = 2
+
+# Variáveis do pássaro
+bird_images = ['bird1', 'bird2']
+bird_animation_index = 0
+bird_animation_speed = 0.2
+bird_animation_timer = 0
+birds = [] 
+
+# variáveis de estado do jogo
+game_over = False
+
 def create_plataforms():
     global plataforms, eggs, available_eggs
     plataforms = []
     eggs = []
-    available_eggs = []  # reiniciar a lista de ovos disponíveis
+    available_eggs = []  
     num_plataforms = 2
 
     for _ in range(num_plataforms):
@@ -69,15 +86,33 @@ def create_plataforms():
             egg_y = y - 20
             egg = Actor('dino_egg', (egg_x, egg_y))
             eggs.append(egg)  
-            available_eggs.append(egg)  # lista de eggs disponíveis a serem alcançados
+            available_eggs.append(egg)  
 
         plataforms.append((plataform, egg))
 
+def create_enemy():
+    if len(cacti) == 0 or cacti[-1].x < WIDTH - random.randint(CACTUS_MIN_DISTANCE, CACTUS_MAX_DISTANCE):
+        cactus = Actor(random.choice(CACTUS_IMAGES))
+        cactus.x = WIDTH + 20
+        cactus.y = HEIGHT - 35
+        cacti.append(cactus)
+
+def create_bird():
+    bird = Actor(random.choice(bird_images))
+    bird.x = WIDTH + 20
+    bird.y = random.randint(100, 200) 
+    birds.append(bird)
+
 create_plataforms()
 
-# função de atualização da tela do game
+# função de atualização do jogo
 def update(dt):
     global background_x, current_image_index, animation_timer, velocity_y, jumping, double_jump, score, collected_eggs
+    global bird_animation_timer, bird_animation_index, game_over
+
+    if game_over:
+        return 
+
     background_x -= velocity_camera
 
     if background_x <= -WIDTH:
@@ -123,14 +158,14 @@ def update(dt):
 
             plataforms[i] = (new_plataform, new_egg)
 
-    # verificação de colisão com os coletáveis
-    for i in range(len(available_eggs) - 1, -1, -1):  # percorrer de trás para frente
+    # verificação de colisão com os ovos
+    for i in range(len(available_eggs) - 1, -1, -1):
         egg = available_eggs[i]
         if player.colliderect(egg):
-            score += 1  # atualiza o score
-            collected_eggs.append(egg)  # adiciona à lista de ovos coletados
-            available_eggs.pop(i)  # remover o ovo já coletado
-            print(f'Ovo coletado! Score: {score}')  # debug
+            score += 1
+            collected_eggs.append(egg)
+            available_eggs.pop(i)
+            print(f'Ovo coletado! Score: {score}')
 
     # atualiza a animação do player
     animation_timer += dt
@@ -140,7 +175,41 @@ def update(dt):
 
     player.image = player_images[current_image_index]
 
-# função de escuta do teclado do player
+    # atualiza os obstáculos
+    create_enemy()
+    for cactus in cacti:
+        cactus.x -= CACTUS_SPEED
+    
+    # verifica colisão com os cactos
+    for cactus in cacti:
+        if player.colliderect(cactus):
+            game_over = True
+
+   
+    cacti[:] = [cactus for cactus in cacti if cactus.right > 0]
+
+    # atualiza os pássaros
+    if random.random() < 0.01:  
+        create_bird()
+        
+    for bird in birds:
+        bird.x -= 3  
+        if player.colliderect(bird):
+            game_over = True  # Colisão com pássaros
+
+    # remover pássaros fora da tela
+    birds[:] = [bird for bird in birds if bird.right > 0]
+
+    # aualiza a animação do pássaro
+    bird_animation_timer += dt
+    if bird_animation_timer > bird_animation_speed:
+        bird_animation_index = (bird_animation_index + 1) % len(bird_images)
+        bird_animation_timer = 0
+
+    for bird in birds:
+        bird.image = bird_images[bird_animation_index]
+
+# função de escuta do teclado
 def on_key_down(key):
     global jumping, velocity_y, double_jump
     if key == keys.SPACE:
@@ -154,7 +223,6 @@ def on_key_down(key):
 # função que desenha os elementos na tela
 def draw():
     screen.fill((255, 255, 255))
-
     ground_height = images.ground.get_height()
     screen.blit("ground", (background_x, HEIGHT - ground_height))
     screen.blit("ground", (background_x + WIDTH, HEIGHT - ground_height))
@@ -162,11 +230,22 @@ def draw():
     for plataform, _ in plataforms:
         screen.draw.filled_rect(plataform, (83, 83, 83))
 
-    # desenha os ovos que não foram coletados
     for egg in available_eggs:
         egg.draw()
 
+    for cactus in cacti:
+        cactus.draw()
+
+    for bird in birds:
+        bird.draw() 
+    
     player.draw()
     screen.draw.text(f'Score: {score}', (10, 10), color='black')
+
+    # tela de GAME OVER
+    if game_over:
+        screen.fill((255, 255, 255))  # Fundo branco
+        screen.draw.text('Game Over!', center=(WIDTH // 2, HEIGHT // 2 - 20), color='#535353', fontname='gameplay', fontsize=60)
+        screen.draw.text(f'Score: {score}', center=(WIDTH // 2, HEIGHT // 2 + 40), color='#535353', fontname='gameplay', fontsize=30)
 
 pgzrun.go()
