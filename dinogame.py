@@ -18,6 +18,22 @@ current_image_index = 0
 animation_speed = 0.1
 animation_timer = 0
 
+# variáveis da música
+music_on = True
+music_button = Rect(230, 220, 140, 50)
+
+# iniciar música junto com o game
+music.play('happysong')
+music.set_volume(0.1)
+
+def toggle_music():
+    global music_on
+    if music_on:
+        music.stop()
+    else:
+        music.play('happysong')
+    music_on = not music_on
+
 # variáveis das plataformas
 plataforms = []
 PLATAFORM_HEIGHT = 3
@@ -228,7 +244,9 @@ def on_key_down(key):
 def on_mouse_down(pos):
     global game_started
     if not game_started and start_button.collidepoint(pos):
-        game_started = True  
+        game_started = True
+    elif music_button.collidepoint(pos):
+        toggle_music()  
 
 # função que desenha os elementos na tela
 def draw():
@@ -237,6 +255,9 @@ def draw():
         screen.draw.text("DINO GAME", center=(WIDTH // 2, start_button.y - 30), fontname="gameplay", color='#535353', fontsize=50)        
         screen.draw.rect(start_button, (0, 0, 0)) 
         screen.draw.text("Start", center=(start_button.x + start_button.width // 2, start_button.y + start_button.height // 2), color='#535353', fontname="gameplay", fontsize=30)
+        
+        screen.draw.rect(music_button, (0,0,0))
+        screen.draw.text("Music On" if music_on else "Music Off", center=(music_button.x + music_button.width // 2, music_button.y + music_button.height // 2), color='#535353', fontname="gameplay", fontsize=20)
         return
 
     # desenha a tela do game em si
