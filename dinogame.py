@@ -22,6 +22,9 @@ animation_timer = 0
 music_on = True
 music_button = Rect(230, 220, 140, 50)
 
+#botão exit
+exit_button = Rect(230, 280, 140, 50)
+
 # iniciar música junto com o game
 music.play('happysong')
 music.set_volume(0.1)
@@ -246,7 +249,9 @@ def on_mouse_down(pos):
     if not game_started and start_button.collidepoint(pos):
         game_started = True
     elif music_button.collidepoint(pos):
-        toggle_music()  
+        toggle_music()
+    elif exit_button.collidepoint(pos):
+        exit()  
 
 # função que desenha os elementos na tela
 def draw():
@@ -258,6 +263,9 @@ def draw():
         
         screen.draw.rect(music_button, (0,0,0))
         screen.draw.text("Music On" if music_on else "Music Off", center=(music_button.x + music_button.width // 2, music_button.y + music_button.height // 2), color='#535353', fontname="gameplay", fontsize=20)
+        
+        screen.draw.rect(exit_button, (255, 0, 0))
+        screen.draw.text("Exit", center=(exit_button.x + exit_button.width // 2, exit_button.y + exit_button.height // 2), color='#535353', fontname="gameplay", fontsize=30)
         return
 
     # desenha a tela do game em si
