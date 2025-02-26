@@ -25,6 +25,9 @@ music_button = Rect(230, 220, 140, 50)
 #botão exit
 exit_button = Rect(230, 280, 140, 50)
 
+#botão tentar novamente
+try_again_button = Rect(230, 220, 140, 50)
+
 # iniciar música junto com o game
 music.play('happysong')
 music.set_volume(0.1)
@@ -59,8 +62,8 @@ collected_eggs = []  # Array p/ rastrear os ovos coletados
 # variáveis dos inimigos
 cacti = []
 CACTUS_IMAGES = ['cactus1', 'cactus2']
-CACTUS_MIN_DISTANCE = 250
-CACTUS_MAX_DISTANCE = 300
+CACTUS_MIN_DISTANCE = 450
+CACTUS_MAX_DISTANCE = 500
 CACTUS_SPEED = 2
 
 # Variáveis do pássaro
@@ -74,6 +77,7 @@ birds = []
 game_over = False
 game_started = False
 start_button = Rect(230, 150, 140, 50) 
+show_game_over = False 
 
 def create_plataforms():
     global plataforms, eggs, available_eggs
@@ -134,7 +138,7 @@ def update(dt):
     if not game_started:  # verifca se o jogo não começou, não atualiza
         return 
 
-    if game_over:
+    if game_over:        
         return 
 
     background_x -= velocity_camera
@@ -212,7 +216,7 @@ def update(dt):
     cacti[:] = [cactus for cactus in cacti if cactus.right > 0]
 
     # atualiza os pássaros
-    if random.random() < 0.01:  
+    if random.random() < 0.005:  
         create_bird()
         
     for bird in birds:
@@ -243,15 +247,45 @@ def on_key_down(key):
             double_jump = True
             velocity_y = -10
 
+
 # função para escutar cliques do mouse
 def on_mouse_down(pos):
-    global game_started
+    global game_started, game_over
+    if game_over:
+        if try_again_button.collidepoint(pos):
+            reset_game()        
+        return
     if not game_started and start_button.collidepoint(pos):
         game_started = True
     elif music_button.collidepoint(pos):
         toggle_music()
     elif exit_button.collidepoint(pos):
-        exit()  
+        exit()
+
+# função p/ reiniciar variáveis do jogo pós clique no try again button
+def reset_game():
+    global player, current_image_index, animation_timer, velocity_y, jumping, double_jump, score
+    global cacti, eggs, available_eggs, birds, game_over, game_started, background_x
+    
+    player.x = 100
+    player.y = HEIGHT - 40
+    current_image_index = 0
+    animation_timer = 0
+    velocity_y = 0
+    jumping = False
+    double_jump = False
+    score = 0
+    cacti.clear()
+    eggs.clear()
+    available_eggs.clear()
+    birds.clear()
+    game_over = False
+    game_started = True
+    background_x = 0
+
+    create_plataforms()  
+    print("Game reset!")  # p/ verificar se a função foi chamada
+  
 
 # função que desenha os elementos na tela
 def draw():
@@ -266,6 +300,16 @@ def draw():
         
         screen.draw.rect(exit_button, (255, 0, 0))
         screen.draw.text("Exit", center=(exit_button.x + exit_button.width // 2, exit_button.y + exit_button.height // 2), color='#535353', fontname="gameplay", fontsize=30)
+        return
+        # tela de GAME OVER
+    if game_over:
+        screen.fill((255, 255, 255))  # Fundo branco
+        screen.draw.text('Game Over!', center=(WIDTH // 2, HEIGHT // 2 - 50), color='#535353', fontname='gameplay', fontsize=60)
+        screen.draw.text(f'Score: {score}', center=(WIDTH // 2, HEIGHT // 2 + 20), color='#535353', fontname='gameplay', fontsize=30)
+     
+        try_again_button.y = HEIGHT // 2 + 70  # Ajuste a posição do botão
+        screen.draw.rect(try_again_button, (0, 0, 0))
+        screen.draw.text("Try Again", center=(try_again_button.x + try_again_button.width // 2, try_again_button.y + try_again_button.height // 2), color='#535353', fontname="gameplay", fontsize=20)
         return
 
     # desenha a tela do game em si
@@ -287,12 +331,6 @@ def draw():
         bird.draw() 
     
     player.draw()
-    screen.draw.text(f'Score: {score}', (10, 10), color='black')
-
-    # tela de GAME OVER
-    if game_over:
-        screen.fill((255, 255, 255))  # Fundo branco
-        screen.draw.text('Game Over!', center=(WIDTH // 2, HEIGHT // 2 - 20), color='#535353', fontname='gameplay', fontsize=60)
-        screen.draw.text(f'Score: {score}', center=(WIDTH // 2, HEIGHT // 2 + 40), color='#535353', fontname='gameplay', fontsize=30)
-
+    screen.draw.text(f'Score: {score}', (10, 10), color='black')    
+    
 pgzrun.go()
