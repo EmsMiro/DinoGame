@@ -40,7 +40,6 @@ try_again_button = Rect(230, 220, 140, 50)
 music.set_volume(0.1)
 music.play('happysong')
 
-
 def toggle_music():
     global music_on
     if music_on:
@@ -261,7 +260,6 @@ def on_key_down(key):
             velocity_y = -10
             jump_sound.play()
 
-
 # função para escutar cliques do mouse
 def on_mouse_down(pos):
     global game_started, game_over
@@ -298,8 +296,7 @@ def reset_game():
     background_x = 0
 
     create_plataforms()  
-    print("Game reset!")  # p/ verificar se a função foi chamada
-  
+    print("Game reset!")  # p/ verificar se a função foi chamada  
 
 # função que desenha os elementos na tela
 def draw():
@@ -346,6 +343,5 @@ def draw():
     
     player.draw()
     screen.draw.text(f'Score: {score}', (10, 10), color='black')
-    
-    
+        
 pgzrun.go()
