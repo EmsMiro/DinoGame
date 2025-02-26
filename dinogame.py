@@ -22,6 +22,14 @@ animation_timer = 0
 music_on = True
 music_button = Rect(230, 220, 140, 50)
 
+# variáveis de som
+pickup_sound = sounds.pickup
+pickup_sound.set_volume(0.1)
+hurt_sound = sounds.hurt
+hurt_sound.set_volume(0.1)
+jump_sound = sounds.jump  
+jump_sound.set_volume(0.1)  
+
 #botão exit
 exit_button = Rect(230, 280, 140, 50)
 
@@ -29,8 +37,9 @@ exit_button = Rect(230, 280, 140, 50)
 try_again_button = Rect(230, 220, 140, 50)
 
 # iniciar música junto com o game
-music.play('happysong')
 music.set_volume(0.1)
+music.play('happysong')
+
 
 def toggle_music():
     global music_on
@@ -193,6 +202,7 @@ def update(dt):
             score += 1
             collected_eggs.append(egg)
             available_eggs.pop(i)
+            pickup_sound.play()
             print(f'Ovo coletado! Score: {score}')
 
     # atualiza a animação do player
@@ -211,6 +221,7 @@ def update(dt):
     # verifica colisão com os cactos
     for cactus in cacti:
         if player.colliderect(cactus):
+            hurt_sound.play()
             game_over = True
 
     cacti[:] = [cactus for cactus in cacti if cactus.right > 0]
@@ -222,6 +233,7 @@ def update(dt):
     for bird in birds:
         bird.x -= 3  
         if player.colliderect(bird):
+            hurt_sound.play()
             game_over = True  # colisão com pássaros
 
     # remover pássaros fora da tela
@@ -243,9 +255,11 @@ def on_key_down(key):
         if not jumping:
             jumping = True
             velocity_y = -13
+            jump_sound.play()
         elif not double_jump:
             double_jump = True
             velocity_y = -10
+            jump_sound.play()
 
 
 # função para escutar cliques do mouse
@@ -331,6 +345,7 @@ def draw():
         bird.draw() 
     
     player.draw()
-    screen.draw.text(f'Score: {score}', (10, 10), color='black')    
+    screen.draw.text(f'Score: {score}', (10, 10), color='black')
+    
     
 pgzrun.go()
